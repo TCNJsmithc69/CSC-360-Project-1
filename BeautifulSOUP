@@ -1,0 +1,126 @@
+
+
+from selenium import webdriver
+import datetime
+import time
+import sys
+from selenium.webdriver.common.keys import Keys
+from threading import Thread
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from bs4 import BeautifulSoup
+import requests
+from selenium.webdriver.support.ui import Select
+import re
+import pandas as pd
+#replace username/password with yours
+#Do not share your credential with anyone!!!
+ACCOUNTS = {
+    "smithc69":"Cd000000326"
+}
+URL = 'https://paws.tcnj.edu/'
+# login webpage
+LOGIN_INI = 'https://paws.tcnj.edu/psp/paws/?cmd=login&languageCd=ENG&'
+# after login webpage
+# you need to change this URL. The current one is for faculty.
+LOGIN_URL = 'https://paws.tcnj.edu/psp/paws/EMPLOYEE/SA/h/?tab=DEFAULT'
+LOGIN_URL2 = 'https://paws.tcnj.edu/psp/paws/EMPLOYEE/SA/c/SA_LEARNER_SERVICES.SSS_STUDENT_CENTER.GBL?PORTALPARAM_PTCNAV=HC_SSS_STUDENT_CENTER&EOPP.SCNode=SA&EOPP.SCPortal=EMPLOYEE&EOPP.SCName=ADMN_SELF_SERVICE&EOPP.SCLabel=&EOPP.SCPTcname=PT_PTPP_SCFNAV_BASEPAGE_SCR&FolderPath=PORTAL_ROOT_OBJECT.PORTAL_BASE_DATA.CO_NAVIGATION_COLLECTIONS.ADMN_SELF_SERVICE.ADMN_S20090220233408332651753&IsFolder=false'
+StartingTime = '2019-08-16 10:07:10'
+def searchCourse(driver, user, programName, courseN):
+    #page = requests.get("https://paws.tcnj.edu/psp/paws/EMPLOYEE/SA/c/SA_LEARNER_SERVICES.SSS_STUDENT_CENTER.GBL?PORTALPARAM_PTCNAV=HC_SSS_STUDENT_CENTER&EOPP.SCNode=SA&EOPP.SCPortal=EMPLOYEE&EOPP.SCName=ADMN_SELF_SERVICE&EOPP.SCLabel=&EOPP.SCPTcname=PT_PTPP_SCFNAV_BASEPAGE_SCR&FolderPath=PORTAL_ROOT_OBJECT.PORTAL_BASE_DATA.CO_NAVIGATION_COLLECTIONS.ADMN_SELF_SERVICE.ADMN_S20090220233408332651753&IsFolder=false")
+    #soup = BeautifulSoup(page.content, 'html.parser')
+    #pb = soup.find(id = "win0divSSR_CLSRSLT_WRK_GROUPBOX2$0")
+    #items1 = soup.find_all('p',id_="trSSR_CLSRCH_MTG1$0_row1")
+    #items1 = pb.find_all('p', id = "trSSR_CLSRCH_MTG1$0_row1")
+    #period_tags = soup.find_all('p',class_="PSLONGEDITBOX")
+    #tonight = items1[0]
+    #print(tonight.prettify())
+    #periods = [pt.get_text() for pt in period_tags]
+    #periods
+    tables = pd.read_html("https://tcnj.instructure.com/courses/1649802/files/folder/projects/project%201?preview=97934828")
+    print(tables[0])
+    print(tables[1])
+	
+    time.sleep(2)
+# Funtion to login
+def login(user,pwd, programName, courseN):
+    driver = webdriver.Chrome()
+    driver.get(URL)
+    LoginStat = False
+    while True:
+        time.sleep(0.05)
+        if LOGIN_INI == driver.current_url:
+           print("Opening...")
+           break;
+    try:
+        loginForm = driver.find_element_by_xpath('//*[@id="userid"]')
+        #longinForm.click()
+        loginForm.send_keys(user)
+        #time.sleep(1)
+        print('send username')
+        passwordForm = driver.find_element_by_xpath('//*[@id="pwd"]')
+        passwordForm.click()
+        passwordForm.send_keys(pwd)
+        submit = driver.find_element_by_xpath('//*[@name="submit"]')
+        submit.click()
+        print(user + " login in process...")
+    except:
+        print(user + " input error")
+    while True:
+        time.sleep(0.05)
+        if LOGIN_URL == driver.current_url :
+           print(user + " login succeed")
+
+
+           studcen = driver.find_element_by_xpath('//*[@name="default"]')
+           studcen.click()
+           print(user + " going to search bar")
+           #time.sleep(3)
+           studcen2 = driver.switch_to.frame(driver.find_element_by_name('TargetContent'))
+           #driver.manage().timeouts().implicitlyWait(5, TimeUnit.SECONDS)
+           studcen2 = driver.find_element_by_name('DERIVED_SSS_SCL_SS_ACAD_INFO_LINK')
+           studcen2 = driver.find_element_by_xpath('//*[@name="DERIVED_SSS_SCR_SSS_LINK_ANCHOR1"]')
+           #driver.manage().timeouts().implicitlyWait(5, TimeUnit.SECONDS)
+           studcen2.click()
+           print("Works\n")
+           time.sleep(3)
+           #studcen3 = driver.switch_to.frame(driver.find_element_by_id('ptifrmtgtframe'))
+           studcen3 = driver.find_element_by_id('CLASS_SEARCH')
+           studcen3 = Select(driver.find_element_by_id('SSR_CLSRCH_WRK_SUBJECT_SRCH$0'))
+           #studcen3.select_by_visible_text('Computer Science (CSC)')
+           studcen3.select_by_value(programName)
+           studcen3 = driver.find_element_by_xpath('//*[@name="SSR_CLSRCH_WRK_CATALOG_NBR$1"]')
+           studcen3.send_keys(courseN)
+           studcen5 = driver.find_element_by_xpath('//*[@name="SSR_CLSRCH_WRK_SSR_OPEN_ONLY$3"]')
+           studcen5.click()
+           studcen4 = driver.find_element_by_xpath('//*[@name="CLASS_SRCH_WRK2_SSR_PB_CLASS_SRCH"]')   
+           studcen4.click()
+           time.sleep(3)
+           searchCourse(driver, user, programName, courseN)
+             #time.sleep(5)
+
+           break
+		   
+               #time.sleep(5)
+    searchCourse(driver, user, programName, courseN)
+if __name__ == "__main__":
+    # username & passwords
+    data = ACCOUNTS
+    # argument sys.argv[1] is discipline name, such as CSC, MAT, BIO, csc, bio ...
+    # argument sys.argv[2] is course number, such as 220, 230, 250, 360
+    # build threads
+    threads = []
+    for account, pwd in data.items():
+        t = Thread(target=login,args=(account,pwd, sys.argv[1], sys.argv[2]))
+        threads.append(t)
+    for thr in threads:
+        time.sleep(0.05)
+        thr.start()
+
+
+
+
+
+
+#Annotations
